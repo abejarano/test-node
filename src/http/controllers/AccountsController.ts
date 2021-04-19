@@ -72,4 +72,14 @@ export class AccountsController {
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json('Erro na sua requisição');
         }
     }
+
+    @httpGet("/balance/:id")
+    async balanceAccount(@request() req: Request, @response() res: Response) {
+        const account = await this.accountRepository.findById(parseInt(req.params.id));
+        if (!(account instanceof Accounts)) {
+            return res.status(HttpStatus.BAD_REQUEST).json('O numero de conta não esstá cadastrado.');
+        }
+
+        return res.status(HttpStatus.OK).json({balance: account.balance});
+    }
 }
