@@ -54,11 +54,7 @@ export class AccountsController {
                 return res.status(HttpStatus.BAD_REQUEST).json('O numero de conta não esstá cadastrado.');
             }
 
-            await this.transactionRepository.save({
-                account: account,
-                amount: data.amount,
-                type_transaction: 'DEPOSITO'
-            });
+            await this.saveTransaction(account, data.amount, 'DEPOSITO');
 
             await this.accountRepository.update(account.id, {balance: account.balance + data.amount});
 
@@ -68,7 +64,6 @@ export class AccountsController {
             if (e instanceof BuildExceptionBase)
                 return e.render(res);
 
-            console.log(e);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json('Erro na sua requisição');
         }
     }
@@ -81,5 +76,39 @@ export class AccountsController {
         }
 
         return res.status(HttpStatus.OK).json({balance: account.balance});
+    }
+
+    @httpPost("/withdrawal")
+    async withdrawalAccount(@request() req: Request, @response() res: Response) {
+        try {
+            const data = req.body;
+            const validateRequest = new DepositAccountRequest();
+            await validateRequest.validate(data);
+
+            const account = await this.accountRepository.findById(data.account_id);
+            if (!(account instanceof Accounts)) {
+                return res.status(HttpStatus.BAD_REQUEST).json('O numero de conta não esstá cadastrado.');
+            }
+
+            await this.saveTransaction(account, data.amount, 'SAQUE');
+
+            await this.accountRepository.update(account.id, {balance: account.balance - data.amount});
+
+            return res.status(HttpStatus.OK).json({message: 'Saque cadastrado com sucuesso.'});
+
+        } catch (e) {
+            if (e instanceof BuildExceptionBase)
+                return e.render(res);
+
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json('Erro na sua requisição');
+        }
+    }
+
+    private async saveTransaction(account: Accounts, amount: number, type: string) {
+        await this.transactionRepository.save({
+            account: account,
+            amount: amount,
+            type_transaction: type
+        });
     }
 }
