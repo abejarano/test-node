@@ -3,7 +3,8 @@ import { InversifyExpressServer } from "inversify-express-utils";
 import * as bodyParser from "body-parser";
 import * as cors from "cors";
 import CONFIG from "./config";
-import { container } from "inversify-props";
+import ProviderContainer from "./ProviderContainer";
+
 
 export class ServerApplication {
     private app: Application;
@@ -13,7 +14,7 @@ export class ServerApplication {
     }
 
     private build(): void {
-        let server: InversifyExpressServer = new InversifyExpressServer(container);
+        let server: InversifyExpressServer = new InversifyExpressServer(ProviderContainer());
         server.setConfig(app => {
             app.use(bodyParser.json());
             app.use(bodyParser.urlencoded({extended: true}));

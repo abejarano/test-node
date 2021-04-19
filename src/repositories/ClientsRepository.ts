@@ -14,8 +14,9 @@ export class ClientRepository extends Repository<Clients> {
         return client;
     }
 
-    async findByCpf(cpf: string): Promise<Clients | null> {
-        return await this.findOne({cpf});
+    async findByCpf(cpf: string) {
+        console.log(cpf);
+        return this.findOne({cpf});
     }
 
 }
