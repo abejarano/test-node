@@ -1,4 +1,4 @@
-import { controller, httpGet, httpPost, request, response } from "inversify-express-utils";
+import { controller, httpGet, httpPost, httpPut, request, response } from "inversify-express-utils";
 import { Request, Response } from "express";
 import { CreateAccountRequest } from "../requests/CreateAccountRequest";
 import { ClientRepository } from "../../repositories/ClientsRepository";
@@ -50,8 +50,9 @@ export class AccountsController {
             await validateRequest.validate(data);
 
             const account = await this.accountRepository.findById(data.account_id);
-            if (!(account instanceof Accounts)) {
-                return res.status(HttpStatus.BAD_REQUEST).json('O numero de conta não esstá cadastrado.');
+            const messageValidate = await this.validateAccount(account);
+            if (messageValidate !== '') {
+                return res.status(HttpStatus.BAD_REQUEST).json({message: messageValidate});
             }
 
             await this.saveTransaction(account, data.amount, 'DEPOSITO');
@@ -71,8 +72,9 @@ export class AccountsController {
     @httpGet("/balance/:id")
     async balanceAccount(@request() req: Request, @response() res: Response) {
         const account = await this.accountRepository.findById(parseInt(req.params.id));
-        if (!(account instanceof Accounts)) {
-            return res.status(HttpStatus.BAD_REQUEST).json('O numero de conta não esstá cadastrado.');
+        const messageValidate = await this.validateAccount(account);
+        if (messageValidate !== '') {
+            return res.status(HttpStatus.BAD_REQUEST).json({message: messageValidate});
         }
 
         return res.status(HttpStatus.OK).json({balance: account.balance});
@@ -86,8 +88,10 @@ export class AccountsController {
             await validateRequest.validate(data);
 
             const account = await this.accountRepository.findById(data.account_id);
-            if (!(account instanceof Accounts)) {
-                return res.status(HttpStatus.BAD_REQUEST).json('O numero de conta não esstá cadastrado.');
+
+            const messageValidate = await this.validateAccount(account);
+            if (messageValidate !== '') {
+                return res.status(HttpStatus.BAD_REQUEST).json({message: messageValidate});
             }
 
             await this.saveTransaction(account, data.amount, 'SAQUE');
@@ -104,6 +108,17 @@ export class AccountsController {
         }
     }
 
+    private validateAccount(account: Accounts): string {
+        let message = '';
+        if (!(account instanceof Accounts)) {
+            message = 'O numero de conta não esstá cadastrado.';
+        }
+        if (!account.is_active) {
+            message = 'Operação cancelada. Sua conta está bloqueada.';
+        }
+        return message;
+    }
+
     private async saveTransaction(account: Accounts, amount: number, type: string) {
         await this.transactionRepository.save({
             account: account,
@@ -115,11 +130,24 @@ export class AccountsController {
     @httpGet("/transactions-history/:id")
     async transactionHistory(@request() req: Request, @response() res: Response) {
         const account = await this.accountRepository.findById(parseInt(req.params.id));
-        if (!(account instanceof Accounts)) {
-            return res.status(HttpStatus.BAD_REQUEST).json('O numero de conta não esstá cadastrado.');
+        const messageValidate = await this.validateAccount(account);
+        if (messageValidate !== '') {
+            return res.status(HttpStatus.BAD_REQUEST).json({message: messageValidate});
         }
         const history = await this.transactionRepository.findByAccount(account);
 
         return res.status(HttpStatus.OK).json({data: history});
+    }
+
+    @httpPut("/lock-account/:id")
+    async lockAccount(@request() req: Request, @response() res: Response) {
+        const account = await this.accountRepository.findById(parseInt(req.params.id));
+        if (!(account instanceof Accounts)) {
+            return res.status(HttpStatus.BAD_REQUEST).json('O numero de conta não esstá cadastrado.');
+        }
+
+        await this.accountRepository.update(account.id, {is_active: false});
+
+        return res.status(HttpStatus.OK).json({message: 'Conta bloqueada com sucesso.'});
     }
 }
