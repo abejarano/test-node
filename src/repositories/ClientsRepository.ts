@@ -14,7 +14,6 @@ export class ClientRepository extends Repository<Clients> {
 
         await validateEntity(client);
         await this.insert(client);
-
         return client;
     }
 

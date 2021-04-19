@@ -14,4 +14,9 @@ export class AccountsRepository extends Repository<Accounts> {
 
         return account;
     }
+
+    async findById(id: number): Promise<Accounts | null> {
+        return await this.findOne(id);
+    }
+
 }
