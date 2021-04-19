@@ -111,4 +111,15 @@ export class AccountsController {
             type_transaction: type
         });
     }
+
+    @httpGet("/transactions-history/:id")
+    async transactionHistory(@request() req: Request, @response() res: Response) {
+        const account = await this.accountRepository.findById(parseInt(req.params.id));
+        if (!(account instanceof Accounts)) {
+            return res.status(HttpStatus.BAD_REQUEST).json('O numero de conta não esstá cadastrado.');
+        }
+        const history = await this.transactionRepository.findByAccount(account);
+
+        return res.status(HttpStatus.OK).json({data: history});
+    }
 }

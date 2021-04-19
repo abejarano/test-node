@@ -3,6 +3,7 @@ import { Repository } from "typeorm/repository/Repository";
 import { Transactions } from "../entity/Transactions";
 import validateEntity from "../core/helpers/validateEntity";
 import * as moment from "moment";
+import { Accounts } from "../entity/Accounts";
 
 @EntityRepository(Transactions)
 export class TransactionsRepository extends Repository<Transactions> {
@@ -15,5 +16,9 @@ export class TransactionsRepository extends Repository<Transactions> {
         await this.insert(transaction);
 
         return transaction;
+    }
+
+    async findByAccount(account: Accounts) {
+        return this.find({account: account});
     }
 }
