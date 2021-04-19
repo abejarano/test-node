@@ -39,3 +39,7 @@ server {
 ```
 $: sudo systemctl restart nginx
 ```
+
+### Documentação API
+
+https://documenter.getpostman.com/view/14466939/TzJu8cTo
