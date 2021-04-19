@@ -8,6 +8,7 @@ export class Accounts {
     id: number;
 
     @Column({
+        default: 0,
         type: "float"
     })
     balance: number
@@ -25,7 +26,7 @@ export class Accounts {
     account_type: string
 
     @Column({
-        default: false
+        default: true
     })
     is_active: boolean;
 
